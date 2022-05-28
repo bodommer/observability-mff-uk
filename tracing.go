@@ -12,19 +12,18 @@ import (
 
 func tracingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO Tracing: Extract cross-boundary tracing context and start tracing. Uncomment following 3 lines and delete the next one.
-		// propagatedCtx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-		// spanCtx, span := otel.Tracer(appName).Start(propagatedCtx, "tracingMiddleware")
-		// tracingId := span.SpanContext().TraceID().String()
+		// Extract cross-boundary tracing context and start tracing.
+		propagatedCtx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+		spanCtx, span := otel.Tracer(appName).Start(propagatedCtx, "tracingMiddleware")
+		tracingId := span.SpanContext().TraceID().String()
 		tracingId := "this-is-not-tracing-id-👎"
 		r.Header.Set(hdrTracingId, tracingId)
 		log := requestLog("tracingMiddleware", r)
 		log.Debug("starting tracing...")
-		// TODO Tracing: End the tracing span. Uncomment following line.
-		// defer span.End()
-		// TODO Tracing: Propagate the span context through the request.
-		// spannedRequest := r.WithContext(spanCtx)
-		spannedRequest := r
+		// End the tracing span.
+		defer span.End()
+		// Propagate the span context through the request.
+		spannedRequest := r.WithContext(spanCtx)
 		w.Header().Set(hdrTracingId, tracingId)
 		next.ServeHTTP(w, spannedRequest)
 		log.Debug("closing tracing...")
