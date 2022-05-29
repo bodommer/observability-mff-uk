@@ -1,9 +1,9 @@
 package main
 
 import (
-	// "go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/jaeger"
-	// "go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
@@ -16,7 +16,6 @@ func tracingMiddleware(next http.Handler) http.Handler {
 		propagatedCtx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 		spanCtx, span := otel.Tracer(appName).Start(propagatedCtx, "tracingMiddleware")
 		tracingId := span.SpanContext().TraceID().String()
-		tracingId := "this-is-not-tracing-id-👎"
 		r.Header.Set(hdrTracingId, tracingId)
 		log := requestLog("tracingMiddleware", r)
 		log.Debug("starting tracing...")
